@@ -1,0 +1,20 @@
+{
+    "manifest_version": 3,
+    "name": "ZoomRot",
+    "version": "0.0",
+  
+    "description": "Video player portion of zoom-video-brainrot",
+  
+    "icons": {
+      "48": "icons/48.png",
+      "96": "icons/96.png"
+    },
+  
+    "content_scripts": [
+      {
+        "matches": ["*://*.zoom.us/*"],
+        "js": ["zoomrot.js"]
+      }
+    ]
+  }
+  
