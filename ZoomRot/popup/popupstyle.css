@@ -1,0 +1,15 @@
+body
+{
+    background-color: rgb(50, 38, 70);
+}
+
+.styledtext
+{
+    color: white;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.centered
+{
+    text-align: center;
+}

@@ -1,5 +1,5 @@
 {
-    "manifest_version": 3,
+    "manifest_version": 2,
     "name": "ZoomRot",
     "version": "0.0",
   
@@ -8,6 +8,12 @@
     "icons": {
       "48": "icons/48.png",
       "96": "icons/96.png"
+    },
+
+    "browser_action": {
+        "default_icon": "icons/48.png",
+        "default_title": "Zoom Rot",
+        "default_popup": "popup/popup.html"
     },
   
     "content_scripts": [
