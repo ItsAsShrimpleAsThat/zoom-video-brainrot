@@ -8,7 +8,18 @@ if __name__ == "__main__":
     print("Why are you trying to run this lmao")
     #exit(0)
 
-TEXTGRID_HEADER = "File type = \"ooTextFile\"\nObject class = \"TextGrid\"\n\n"
+"""
+Exapands to:
+---------------------
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0
+xmax = {maxTime}
+tiers? <exists>
+size = {numTiers}
+"""
+TEXTGRID_HEADER = "File type = \"ooTextFile\"\nObject class = \"TextGrid\"\n\nxmin = 0\nxmax = {maxTime}\ntiers? <exists>\nsize = {numTiers}"
 
 # returns tuple of min and max timestamps
 def parseTimestamps(timestamps):
@@ -35,7 +46,7 @@ def convert(vttPath, outputPath):
     textGridFile = open(outputPath, "a") # Output file
 
     # Go to end and get max time and number of tiers
-    maxTime, maxTier = None, None
+    maxTime, numTiers = None, None
     searchLine = len(vttFileList) - 1
     for safetyCounter in range(10):  # Run loop max 10 times in case something gets fucked up
         line = vttFileList[searchLine]
@@ -43,13 +54,14 @@ def convert(vttPath, outputPath):
         if "-->" in line:
             prevLine = vttFileList[searchLine - 1].strip("\n")
             if prevLine.isdigit():
-                maxTier = int(prevLine)
-                maxTime = parseTimestamps(line)[0]
+                numTiers = int(prevLine)
+                maxTime = parseTimestamps(line)[1]
                 break
 
         searchLine -= 1
 
-    textGridFile.write(TEXTGRID_HEADER)
+    textGridFile.write(TEXTGRID_HEADER.format(maxTime = maxTime, 
+                                              numTiers = numTiers))
 
     for i in range(2, len(vttFileList)):
         line = vttFileList[i].strip("\n")
