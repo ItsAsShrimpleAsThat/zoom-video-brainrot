@@ -7,7 +7,7 @@ acousticmodelpathfile = open("acoustic.path")
 ACOUSTIC_MODEL_PATH = acousticmodelpathfile.read()
 acousticmodelpathfile.close()
 
-dictionarypathfile = open("dictionary.path")
+dictionarypathfile = open("dictionary.path", "r")
 DICTIONARY_PATH = dictionarypathfile.read()
 dictionarypathfile.close()
 

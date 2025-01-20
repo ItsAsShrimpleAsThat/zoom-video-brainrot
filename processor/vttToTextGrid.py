@@ -2,8 +2,64 @@
 # Heres a link kinda clears it up a tiny bit? https://www.fon.hum.uva.nl/praat/manual/TextGrid_file_formats.html
 # And a tool that converts other subtitle formats to TextGrid https://github.com/patrickschu/textgrid-convert
 
+import os
+
 if __name__ == "__main__":
     print("Why are you trying to run this lmao")
-    exit(0)
+    #exit(0)
 
 TEXTGRID_HEADER = "File type = \"ooTextFile\"\nObject class = \"TextGrid\"\n\n"
+
+# returns tuple of min and max timestamps
+def parseTimestamps(timestamps):
+    minTimeString, __, maxTimeString = timestamps.split(" ")
+
+    minTimeSplit = minTimeString.split(":")
+    maxTimeSplit = maxTimeString.split(":")
+
+    minTime = int(minTimeSplit[0]) * 3600 + int(minTimeSplit[1]) * 60 + float(minTimeSplit[2])
+    maxTime = int(maxTimeSplit[0]) * 3600 + int(maxTimeSplit[1]) * 60 + float(maxTimeSplit[2])
+
+    return (minTime, maxTime)
+
+#print(parseTimestamps("01:30:36.290 --> 01:30:37.140"))
+def convert(vttPath, outputPath):
+    if not os.path.exists(vttPath):
+        print("Path " + vttPath + " was not found.")
+
+    vttFile = open(vttPath, "r") # Input file
+    
+    vttFileList = vttFile.readlines()
+
+    open(outputPath, "w").close() # Empty textgrid file if it exists
+    textGridFile = open(outputPath, "a") # Output file
+
+    # Go to end and get max time and number of tiers
+    maxTime, maxTier = None, None
+    searchLine = len(vttFileList) - 1
+    for safetyCounter in range(10):  # Run loop max 10 times in case something gets fucked up
+        line = vttFileList[searchLine]
+        
+        if "-->" in line:
+            prevLine = vttFileList[searchLine - 1].strip("\n")
+            if prevLine.isdigit():
+                maxTier = int(prevLine)
+                maxTime = parseTimestamps(line)[0]
+                break
+
+        searchLine -= 1
+
+    textGridFile.write(TEXTGRID_HEADER)
+
+    for i in range(2, len(vttFileList)):
+        line = vttFileList[i].strip("\n")
+
+        if line.isdigit():
+            pass
+
+        if(i < 10): 
+            print(line)
+
+    vttFile.close()
+
+convert("download/test.vtt", "download/output.TextGrid")
