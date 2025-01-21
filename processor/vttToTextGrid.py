@@ -14,12 +14,13 @@ Exapands to:
 File type = "ooTextFile"
 Object class = "TextGrid"
 
-xmin = 0
+xmin = {minTime}
 xmax = {maxTime}
 tiers? <exists>
 size = {numTiers}
+item []:
 """
-TEXTGRID_HEADER = "File type = \"ooTextFile\"\nObject class = \"TextGrid\"\n\nxmin = 0\nxmax = {maxTime}\ntiers? <exists>\nsize = {numTiers}"
+TEXTGRID_HEADER = "File type = \"ooTextFile\"\nObject class = \"TextGrid\"\n\nxmin = {minTime}\nxmax = {maxTime}\ntiers? <exists>\nsize = {numTiers}\nitem []:\n"
 
 # returns tuple of min and max timestamps
 def parseTimestamps(timestamps):
@@ -51,16 +52,19 @@ def convert(vttPath, outputPath):
     for safetyCounter in range(10):  # Run loop max 10 times in case something gets fucked up
         line = vttFileList[searchLine]
         
-        if "-->" in line:
-            prevLine = vttFileList[searchLine - 1].strip("\n")
-            if prevLine.isdigit():
+        if "-->" in line:  # "-->" is found in vtt timestamps
+            prevLine = vttFileList[searchLine - 1].strip("\n") # JUST TO BE SURE, we make sure the previous line is a number. if it is, we know we're looking at a timestamp
+            if prevLine.isdigit():  # Who knows, maybe someone's zoom name is "-->"
                 numTiers = int(prevLine)
                 maxTime = parseTimestamps(line)[1]
                 break
-
         searchLine -= 1
+    
+    # Get first timestamp starting time
+    minTime = parseTimestamps(vttFileList[3])[0]
 
-    textGridFile.write(TEXTGRID_HEADER.format(maxTime = maxTime, 
+    textGridFile.write(TEXTGRID_HEADER.format(minTime = minTime,
+                                              maxTime = maxTime,    # Write header with the xmax and size we just calculated
                                               numTiers = numTiers))
 
     for i in range(2, len(vttFileList)):
