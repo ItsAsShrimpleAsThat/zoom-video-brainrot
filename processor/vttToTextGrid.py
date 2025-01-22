@@ -59,7 +59,7 @@ def parseTimestamps(timestamps):
     return (minTime, maxTime)
 
 def getVTTLineText(line): # Get just the text (remove speaker) from a VTT line
-    return ":".join(line.strip("\n").split(":")[1:]) 
+    return ":".join(line.strip("\n").split(":")[1:]).removeprefix(" ")
 
 #print(parseTimestamps("01:30:36.290 --> 01:30:37.140"))
 def convert(vttPath, outputPath):
