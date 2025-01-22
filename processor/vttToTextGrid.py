@@ -22,6 +22,8 @@ item []:
 """
 TEXTGRID_HEADER = "File type = \"ooTextFile\"\nObject class = \"TextGrid\"\n\nxmin = {minTime}\nxmax = {maxTime}\ntiers? <exists>\nsize = {numTiers}\nitem []:\n"
 
+TIER_HEADER = "    item[{tierIndex}]:\n        class = \"IntervalTier\"\n        name = \"{tierName}\"\n        xmin = {xmin}\n        xmax = {xmax}\n        intervals: size = {numIntervals}\n"
+
 # returns tuple of min and max timestamps
 def parseTimestamps(timestamps):
     minTimeString, __, maxTimeString = timestamps.split(" ")
@@ -33,6 +35,9 @@ def parseTimestamps(timestamps):
     maxTime = int(maxTimeSplit[0]) * 3600 + int(maxTimeSplit[1]) * 60 + float(maxTimeSplit[2])
 
     return (minTime, maxTime)
+
+def getVTTLineText(line): # Get just the text (remove speaker) from a VTT line
+    return ":".join(line.split(":")[1:])
 
 #print(parseTimestamps("01:30:36.290 --> 01:30:37.140"))
 def convert(vttPath, outputPath):
@@ -67,14 +72,26 @@ def convert(vttPath, outputPath):
                                               maxTime = maxTime,    # Write header with the xmax and size we just calculated
                                               numTiers = numTiers))
 
-    for i in range(2, len(vttFileList)):
-        line = vttFileList[i].strip("\n")
+    speakers = dict() # Dictionary to associate lines with a speaker
+    firstTierOffset = 2 # Which line does the first tier start in the .vtt file? Line 3, and because computers count from 0, this is set to 2
+    for i in range(numTiers):
+        speaker = vttFileList[i * 4 + firstTierOffset + 2].strip("\n").split(":")[0]
 
-        if line.isdigit():
-            pass
-
-        if(i < 10): 
-            print(line)
+        if(speaker not in speakers):
+            speakers[speaker] = { "lines" : [], "xmin" : -1, "xmax" : -1 }
+            speakers[speaker]["xmin"] = parseTimestamps(vttFileList[i * 4 + firstTierOffset + 1])[0] # Set xmin to min timestamp of this line
+            
+        #speakers[speaker]["lines"].append(":".join(line[1:]))
+        speakers[speaker]["lines"].append(i)
+        speakers[speaker]["xmax"] = max(speakers[speaker]["xmax"], parseTimestamps(vttFileList[i * 4 + firstTierOffset + 1])[1]) # Update xmax
+    
+    speakerIndex = 1 # Iterates by 1 for every speaker, is used for item[tierNumber] in the TextGrid file
+    for speakerName in speakers:
+        currentSpeaker = speakers[speakerName]
+        textGridFile.write(TIER_HEADER.format(tierIndex=speakerIndex, tierName=speakerName, xmin=currentSpeaker["xmin"], xmax=currentSpeaker["xmax"], numIntervals=len(currentSpeaker["lines"])))
+        speakerIndex += 1
+    
+    print(speakers)
 
     vttFile.close()
 
