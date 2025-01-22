@@ -1,6 +1,7 @@
 import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import subprocess
 import montreal_forced_aligner
 
 acousticmodelpathfile = open("acoustic.path")
@@ -11,10 +12,14 @@ dictionarypathfile = open("dictionary.path", "r")
 DICTIONARY_PATH = dictionarypathfile.read()
 dictionarypathfile.close()
 
+FFMPEG_DEFAULT_CONVERT = "ffmpeg -i {inputPath} -y -vn {outputPath}"
+
 # aligner = montreal_forced_aligner.alignment.PretrainedAligner(acoustic_model_path=ACOUSTIC_MODEL_PATH, dictionary_path=DICTIONARY_PATH)
 
 app = Flask(__name__)
 CORS(app)
+
+subprocess.call(FFMPEG_DEFAULT_CONVERT.format(inputPath=, outputPath=), shell=True)
 
 @app.route("/")
 def test():
