@@ -112,7 +112,7 @@ def convert(vttPath, outputPath):
         # Write tier header
         textGridFile.write(TIER_HEADER.format(tierIndex=speakerIndex, tierName=speakerName, xmin=currentSpeaker["xmin"], xmax=currentSpeaker["xmax"], numIntervals=len(currentSpeaker["lines"])))
 
-        currentInterval = 0 # interval counter
+        currentInterval = 1 # interval counter
         for lineIndex in currentSpeaker["lines"]:
             line = getVTTLineText(vttFileList[lineIndex * 4 + firstTierOffset + 2])
             
