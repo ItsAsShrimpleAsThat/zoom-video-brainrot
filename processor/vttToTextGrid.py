@@ -61,7 +61,6 @@ def parseTimestamps(timestamps):
 def getVTTLineText(line): # Get just the text (remove speaker) from a VTT line
     return ":".join(line.strip("\n").split(":")[1:]).removeprefix(" ")
 
-#print(parseTimestamps("01:30:36.290 --> 01:30:37.140"))
 def convert(vttPath, outputPath):
     if not os.path.exists(vttPath):
         print("Path " + vttPath + " was not found.")
@@ -74,7 +73,7 @@ def convert(vttPath, outputPath):
     textGridFile = open(outputPath, "a") # Output file
 
     # Go to end and get max time and number of tiers
-    maxTime, numTiers = None, None
+    maxTime, numLines = None, None
     searchLine = len(vttFileList) - 1
     for safetyCounter in range(10):  # Run loop max 10 times in case something gets fucked up
         line = vttFileList[searchLine]
@@ -82,21 +81,14 @@ def convert(vttPath, outputPath):
         if "-->" in line:  # "-->" is found in vtt timestamps
             prevLine = vttFileList[searchLine - 1].strip("\n") # JUST TO BE SURE, we make sure the previous line is a number. if it is, we know we're looking at a timestamp
             if prevLine.isdigit():  # Who knows, maybe someone's zoom name is "-->"
-                numTiers = int(prevLine)
+                numLines = int(prevLine)
                 maxTime = parseTimestamps(line)[1]
                 break
         searchLine -= 1
-    
-    # Get first timestamp starting time
-    minTime = parseTimestamps(vttFileList[3])[0]
-
-    textGridFile.write(TEXTGRID_HEADER.format(minTime = minTime,
-                                              maxTime = maxTime,    # Write header with the xmax and size we just calculated
-                                              numTiers = numTiers))
 
     speakers = dict() # Dictionary to associate lines with a speaker
     firstTierOffset = 2 # Which line does the first tier start in the .vtt file? Line 3, and because computers count from 0, this is set to 2
-    for i in range(numTiers):
+    for i in range(numLines):
         speaker = vttFileList[i * 4 + firstTierOffset + 2].strip("\n").split(":")[0]
 
         if(speaker not in speakers):
@@ -106,6 +98,13 @@ def convert(vttPath, outputPath):
         speakers[speaker]["lines"].append(i)
         speakers[speaker]["xmax"] = max(speakers[speaker]["xmax"], parseTimestamps(vttFileList[i * 4 + firstTierOffset + 1])[1]) # Update xmax
     
+    # Get first timestamp starting time
+    minTime = parseTimestamps(vttFileList[3])[0]
+
+    textGridFile.write(TEXTGRID_HEADER.format(minTime = minTime,
+                                              maxTime = maxTime,    # Write header with the xmax and size we just calculated
+                                              numTiers = len(speakers)))
+
     speakerIndex = 1 # Iterates by 1 for every speaker, is used for item[tierNumber] in the TextGrid file
     for speakerName in speakers:
         currentSpeaker = speakers[speakerName]
