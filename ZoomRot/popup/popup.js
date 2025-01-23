@@ -7,40 +7,27 @@ function go(tabs)
 
 let test = document.getElementById("testtest");
 
-//goButton.disabled = true;
+goButton.disabled = true;
 function contact(tabs)
 {
-    // fetch("http://127.0.0.1:6814/contact")
-    //     .then((response) => {
-    //         if(!response.ok) 
-    //         {
-    //             goButton.disabled = true;
-    //         }
-    //         return response.json();
-    //     })
-    //     .then((returnjson) => {
-    //         test.innerHTML = returnjson.status;
-    //         if(returnjson.status === "Contact.")
-    //         {
-    //             goButton.disabled = false;
-    //         }
-    //     })
-
-    try
-    {
-        let response = fetch("http://127.0.0.1:6814/contact");
-        let responseJson = response.json();
-        
-        if(returnjson.status === "Contact.")
-        {
-            goButton.disabled = false;
-        }
-    }
-    catch
-    {
-        goButton.disabled = true;
-        test.innerHTML = "shit"
-    }
+    fetch("http://127.0.0.1:6814/contact")
+        .then((response) => {
+            if(!response.ok) 
+            {
+                goButton.disabled = true;
+            }
+            return response.json();
+        })
+        .then((returnjson) => {
+            test.innerHTML = returnjson.status;
+            if(returnjson.status === "Contact.")
+            {
+                goButton.disabled = false;
+            }
+        })
+        .catch((error) => {
+            goButton.disabled = true;
+        })
 }
 
 goButton.addEventListener("click", function(){
