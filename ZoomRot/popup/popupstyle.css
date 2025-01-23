@@ -23,14 +23,26 @@ body
 
 button
 {
-    background-color: #725302;
+    background-color: #02722f;
     height: 30pt;
-    border: #47033a solid 1pt;
+    border: #065520 solid 2pt;
     border-radius: 10pt;
 }
 
 button:hover
 {
-    background-color: #453605;
-    transition: 0.1;
+    background-color: #05451a;
+    transition: 0.2;
+}
+
+button:disabled
+{
+    background-color: #032e11;
+    transition: 0.2;
+}
+
+hr
+{
+    width: 90%;
+    color:aliceblue;
 }

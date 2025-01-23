@@ -24,9 +24,11 @@ CORS(app)
 
 @app.route("/alive")
 def alive():
-  
-  print("I HAVE BEEN RUN")
-  return jsonify({"message" : "Hello from Python!"})
+    return jsonify({"message" : "Hello from Python!"})
+
+@app.route("/contact")
+def contact():
+    return jsonify({"status" : "Contact."})
 
 if __name__ == "__main__":
-  app.run(host="0.0.0.0", port=6814)
+    app.run(host="localhost", port=6814)
