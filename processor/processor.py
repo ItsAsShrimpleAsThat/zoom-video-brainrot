@@ -1,6 +1,6 @@
 import os
 from flask import Flask, jsonify, request, after_this_request
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 import subprocess
 import montreal_forced_aligner
 from time import sleep
@@ -22,15 +22,11 @@ CORS(app)
 
 #subprocess.call(FFMPEG_DEFAULT_CONVERT.format(inputPath=, outputPath=), shell=True)
 
-@app.route("/")
-def test():
-  return "test"
-
 @app.route("/alive")
 def alive():
-
+  
   print("I HAVE BEEN RUN")
-  return 200
+  return jsonify({"message" : "Hello from Python!"})
 
 if __name__ == "__main__":
   app.run(host="0.0.0.0", port=6814)

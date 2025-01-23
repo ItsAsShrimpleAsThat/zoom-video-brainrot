@@ -1,5 +1,3 @@
-console.log("testmogsnackduke")
-console.log("I AM GOING TO FUCKING KILL MYSELF WHY ISNT THIS WORKING")
 addEventListener("DOMContentLoaded", (event) => {
     let videoplayer = document.getElementsByClassName("transcript-wrapper")[0];
 
@@ -8,8 +6,20 @@ addEventListener("DOMContentLoaded", (event) => {
     console.log("testttt")
 });
 
+
 browser.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        console.log("WHAT THE FUCK")
+        if (request.message === "start")
+        {
+            console.log("Starting...")
+
+            fetch("http://127.0.0.1:6814/alive")
+                .then((response) => {
+                    return response.json();
+                })
+                .then((returnjson) => {
+                    console.log(returnjson.message)
+                })
+        }
     }
 );
