@@ -1,8 +1,9 @@
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, after_this_request
 from flask_cors import CORS
 import subprocess
 import montreal_forced_aligner
+from time import sleep
 
 acousticmodelpathfile = open("acoustic.path")
 ACOUSTIC_MODEL_PATH = acousticmodelpathfile.read()
@@ -19,11 +20,17 @@ FFMPEG_DEFAULT_CONVERT = "ffmpeg -i {inputPath} -y -vn {outputPath}"
 app = Flask(__name__)
 CORS(app)
 
-subprocess.call(FFMPEG_DEFAULT_CONVERT.format(inputPath=, outputPath=), shell=True)
+#subprocess.call(FFMPEG_DEFAULT_CONVERT.format(inputPath=, outputPath=), shell=True)
 
 @app.route("/")
 def test():
   return "test"
+
+@app.route("/alive")
+def alive():
+
+  print("I HAVE BEEN RUN")
+  return 200
 
 if __name__ == "__main__":
   app.run(host="0.0.0.0", port=6814)

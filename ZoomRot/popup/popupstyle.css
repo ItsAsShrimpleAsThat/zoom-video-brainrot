@@ -14,3 +14,23 @@ body
 {
     text-align: center;
 }
+
+.centerflex
+{
+    display: flex;
+    justify-content: center;
+}
+
+button
+{
+    background-color: #725302;
+    height: 30pt;
+    border: #47033a solid 1pt;
+    border-radius: 10pt;
+}
+
+button:hover
+{
+    background-color: #453605;
+    transition: 0.1;
+}
