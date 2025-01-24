@@ -5,11 +5,14 @@ import subprocess
 import montreal_forced_aligner
 from time import sleep
 
-acousticmodelpathfile = open("acoustic.path")
+acousticPathFilePath = "acoustic.path" if os.path.exists("acoustic.path") else "processor/acoustic.path"
+dictionaryPathFilePath = "dictionary.path" if os.path.exists("dictionary.path") else "processor/dictionary.path"
+
+acousticmodelpathfile = open(acousticPathFilePath, "r")
 ACOUSTIC_MODEL_PATH = acousticmodelpathfile.read()
 acousticmodelpathfile.close()
 
-dictionarypathfile = open("dictionary.path", "r")
+dictionarypathfile = open(dictionaryPathFilePath, "r")
 DICTIONARY_PATH = dictionarypathfile.read()
 dictionarypathfile.close()
 
@@ -29,6 +32,10 @@ def alive():
 @app.route("/contact")
 def contact():
     return jsonify({"status" : "Contact."})
+
+@app.route("/brainrot")
+def brainrot():
+    return jsonify({""})
 
 if __name__ == "__main__":
     app.run(host="localhost", port=6814)
