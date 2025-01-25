@@ -1,2 +1,3 @@
 *.path
 processor/download/
+processor/__pycache__

@@ -123,5 +123,3 @@ def convert(vttPath, outputPath):
         speakerIndex += 1
 
     vttFile.close()
-
-convert("download/test.vtt", "download/output.TextGrid")
