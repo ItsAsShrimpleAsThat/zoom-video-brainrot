@@ -1,14 +1,10 @@
 import os
-from flask import Flask, jsonify, request, after_this_request
-from flask_cors import CORS, cross_origin
+from flask import Flask, jsonify
+from flask_cors import CORS
 import subprocess
-import montreal_forced_aligner
-from time import sleep
-import shutil
 import glob
-
-import montreal_forced_aligner.config
 import vttToTextGrid
+import json
 
 inProcessorPath = os.path.exists("acoustic.path")
 
@@ -28,7 +24,7 @@ CORPUS_FILE_NAMES = "brainrot" # What should the converted .wav or .TextGrid fil
 
 CORPUS_PATH = os.path.abspath("download").replace("\\", "/") if inProcessorPath else os.path.abspath("processor/download").replace("\\", "/")
 ALIGNER_OUTPUT_PATH = CORPUS_PATH + "/output"
-MFA_ALIGN_COMMAND = "mfa align {corpusPath} {dictionaryPath} {modelPath} {outputPath} --clean --final_clean --cleanup_textgrids --uses_speaker_adaptation false"
+MFA_ALIGN_COMMAND = "mfa align {corpusPath} {dictionaryPath} {modelPath} {outputPath} --clean --final_clean --cleanup_textgrids --uses_speaker_adaptation false --output_format json"
 #if erros use --beam 100
 # aligner = montreal_forced_aligner.alignment.PretrainedAligner(acoustic_model_path=ACOUSTIC_MODEL_PATH, dictionary_path=DICTIONARY_PATH)
 
@@ -56,10 +52,16 @@ def align():
 # ffmpegConvert(CORPUS_PATH + "/zoom.mp4", CORPUS_PATH + "/zoom.wav")
 # vttToTextGrid.convert(CORPUS_PATH + "/zoom.vtt", CORPUS_PATH + "/zoom.TextGrid")
 
+def processJson(path):
+    print(path)
+    tgFile = open(path, encoding="utf8")
+    tgJson = json.load(tgFile)
+    for i in tgJson["tiers"]:
+        print(i)
+
 @app.route("/alive")
 def alive():
-    return jsonify({"message" : "Hello from Python!"})
-
+    return jsonify({"message" : "Hello from Python!"})  
 @app.route("/contact")
 def contact():
     return jsonify({"status" : "Contact."})
@@ -103,7 +105,7 @@ def testRot():
 
     return jsonify({""})
     
-testRot()
+processJson(f"{CORPUS_PATH}/output/brainrot.json")
 
 if __name__ == "__main__":
     app.run(host="localhost", port=6814)
