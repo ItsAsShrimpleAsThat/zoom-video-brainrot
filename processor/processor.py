@@ -28,6 +28,9 @@ MFA_ALIGN_COMMAND = "mfa align {corpusPath} {dictionaryPath} {modelPath} {output
 #if erros use --beam 100
 # aligner = montreal_forced_aligner.alignment.PretrainedAligner(acoustic_model_path=ACOUSTIC_MODEL_PATH, dictionary_path=DICTIONARY_PATH)
 
+MAX_CHARACTERS_PER_CAPTION = 25
+CAPITALIZE_CAPTIONS = True
+
 app = Flask(__name__)
 CORS(app)
 
@@ -69,18 +72,35 @@ def getCaptionStream(path):
     searching = True
     while(searching):
         searchingCaption = True
-        currentCaption = {"speaker" : "", "msg" : "", "wordTimings" : []}
+        unmodifiedCaption = True # Caption has not been set
+        currentCaption = {"speaker" : "", "text" : "", "wordTimings" : []}
 
         while(searchingCaption):
-            minTimeWord = [999999999, 999999999, "I should not be seen!"]
+            minTimeWord = [999999999, 999999999, "I should not be seen!", "speaker"]
 
             for speaker in speakers:
                 if tgJson["tiers"][speaker]["entries"][speakerLineIndicies[speaker]][0] < minTimeWord[0]:
-                    minTimeWord = tgJson["tiers"][speaker]["entries"][speakerLineIndicies[speaker]]
+                    minTimeWord = tgJson["tiers"][speaker]["entries"][speakerLineIndicies[speaker]] + [speaker]
 
             print(minTimeWord)
-            break
+            
+            if unmodifiedCaption:  # Initialize caption with speaker
+                unmodifiedCaption = False
+                currentCaption["speaker"] = minTimeWord[3]
+
+            if currentCaption["speaker"] == minTimeWord[3]:
+                if len(list(currentCaption["text"])) + len(minTimeWord[2]) > MAX_CHARACTERS_PER_CAPTION:
+                    searchingCaption = False
+                    currentCaption["text"] = currentCaption["text"].removesuffix(" ")
+                    break
+                else:
+                    currentCaption["text"] += minTimeWord[2].upper() + " " if CAPITALIZE_CAPTIONS else minTimeWord[2].lower() + " "
+                    currentCaption["wordTimings"].append([minTimeWord[0], minTimeWord[1]])
+                    speakerLineIndicies[minTimeWord[3]] += 1
+
+        captionStream.append(currentCaption)
         break
+    print(captionStream)
 
 @app.route("/alive")
 def alive():
