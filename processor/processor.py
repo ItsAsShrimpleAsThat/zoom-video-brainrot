@@ -52,12 +52,35 @@ def align():
 # ffmpegConvert(CORPUS_PATH + "/zoom.mp4", CORPUS_PATH + "/zoom.wav")
 # vttToTextGrid.convert(CORPUS_PATH + "/zoom.vtt", CORPUS_PATH + "/zoom.TextGrid")
 
-def processJson(path):
-    print(path)
+def getCaptionStream(path):
     tgFile = open(path, encoding="utf8")
     tgJson = json.load(tgFile)
-    for i in tgJson["tiers"]:
-        print(i)
+    
+    speakers = []
+    speakerLineIndicies = {}
+    for speaker in tgJson["tiers"]:
+        if speaker.endswith("words"): # Only add word tiers to speakers, not phonemes
+            speakers.append(speaker) 
+            speakerLineIndicies[speaker] = 0
+    
+    captionStream = []
+    print(tgJson["tiers"][speakers[0]]["entries"][speakerLineIndicies[speakers[0]]][0])
+    
+    searching = True
+    while(searching):
+        searchingCaption = True
+        currentCaption = {"speaker" : "", "msg" : "", "wordTimings" : []}
+
+        while(searchingCaption):
+            minTimeWord = [999999999, 999999999, "I should not be seen!"]
+
+            for speaker in speakers:
+                if tgJson["tiers"][speaker]["entries"][speakerLineIndicies[speaker]][0] < minTimeWord[0]:
+                    minTimeWord = tgJson["tiers"][speaker]["entries"][speakerLineIndicies[speaker]]
+
+            print(minTimeWord)
+            break
+        break
 
 @app.route("/alive")
 def alive():
@@ -105,7 +128,7 @@ def testRot():
 
     return jsonify({""})
     
-processJson(f"{CORPUS_PATH}/output/brainrot.json")
+getCaptionStream(f"{CORPUS_PATH}/output/brainrot.json")
 
 if __name__ == "__main__":
     app.run(host="localhost", port=6814)
