@@ -106,11 +106,11 @@ def getCaptionStream(path):
                     currentCaption["wordTimings"].append([minTimeWord[0], minTimeWord[1]])
                     speakerLineIndicies[minTimeWord[3]] += 1  #SOMETHING ABOUT ME IS BROKEN, PLEASEFIX
             else:
-                searchingCaption = False;
+                searchingCaption = False
 
         captionStream.append(currentCaption)
         
-    print(captionStream)
+    return captionStream
 
 @app.route("/alive")
 def alive():
@@ -121,13 +121,33 @@ def contact():
 
 @app.route("/brainrot")
 def brainrot():
-    mp4Files = glob.glob(f"{CORPUS_PATH}/*.mp4")
-    if len(mp4Files) == 0:
-        return jsonify({"success" : False})
+    mp4Files = glob.glob(f"{CORPUS_PATH}/*.mp4") # Get all mp4, wav, and vtt files in download folder
+    wavFiles = glob.glob(f"{CORPUS_PATH}/{CORPUS_FILE_NAMES}.wav")
+    vttFiles = glob.glob(f"{CORPUS_PATH}/*.vtt")
     
-    print(mp4Files)
+    if len(mp4Files) < 1: # Only proceed if theres 1 mp4 file or wav file
+        if len(wavFiles) == 1: # We can use wav files from previous run
+            print("wav file found, not converting mp4")
+        else:
+            return jsonify({"status" : "ERROR: mp4 file or wav file not found in corpus folder"})
+    elif len(mp4Files) > 1:
+        return jsonify({"status" : "ERROR: more than 1 mp4 file found. please only place 1 mp4 file in corpus folder"})
     
-    return jsonify({""})
+    if len(vttFiles) < 1:
+        return jsonify({"status" : "ERROR: no vtt file found in corpus folder"})
+    elif len(vttFiles) > 1:
+        return jsonify({"status" : "ERROR: more than 1 vtt file found. please only place 1 vtt file in corpus folder"})
+
+    if len(mp4Files) == 1: # Convert mp4 to wav if we don't already have a wav file
+        mp4File = mp4Files[0]
+        ffmpegConvert(mp4File, f"{CORPUS_PATH}/{CORPUS_FILE_NAMES}.wav")
+        
+    vttFile = vttFiles[0]
+    vttToTextGrid.convert(vttFile, f"{CORPUS_PATH}/{CORPUS_FILE_NAMES}.TextGrid")
+
+    align()
+
+    return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json")})
 
 def testRot():
     mp4Files = glob.glob(f"{CORPUS_PATH}/*.mp4") # Get all mp4, wav, and vtt files in download folder
@@ -157,8 +177,6 @@ def testRot():
     align()
 
     return jsonify({""})
-    
-getCaptionStream(f"{CORPUS_PATH}/output/brainrot.json")
 
 if __name__ == "__main__":
     app.run(host="localhost", port=6814)
