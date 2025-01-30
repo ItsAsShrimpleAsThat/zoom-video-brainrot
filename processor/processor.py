@@ -74,32 +74,42 @@ def getCaptionStream(path):
         searchingCaption = True
         unmodifiedCaption = True # Caption has not been set
         currentCaption = {"speaker" : "", "text" : "", "wordTimings" : []}
+        skippedAll = True # Used to break out while(searching)
 
         while(searchingCaption):
             minTimeWord = [999999999, 999999999, "I should not be seen!", "speaker"]
 
             for speaker in speakers:
+                if speakerLineIndicies[speaker] >= len(tgJson["tiers"][speaker]["entries"]) - 1:
+                    continue
+                
+                skippedAll = False # Found at least one line, so we shouldnt break out of the loop
+
                 if tgJson["tiers"][speaker]["entries"][speakerLineIndicies[speaker]][0] < minTimeWord[0]:
                     minTimeWord = tgJson["tiers"][speaker]["entries"][speakerLineIndicies[speaker]] + [speaker]
 
-            print(minTimeWord)
+            if skippedAll:
+                searching = False
+                break
             
             if unmodifiedCaption:  # Initialize caption with speaker
                 unmodifiedCaption = False
                 currentCaption["speaker"] = minTimeWord[3]
 
-            if currentCaption["speaker"] == minTimeWord[3]:
-                if len(list(currentCaption["text"])) + len(minTimeWord[2]) > MAX_CHARACTERS_PER_CAPTION:
+            if currentCaption["speaker"] == minTimeWord[3]:  # Make sure speaker of this word is the speaker of the current caption
+                if len(list(currentCaption["text"])) + len(minTimeWord[2]) > MAX_CHARACTERS_PER_CAPTION: # End caption if it exceeds max characters
                     searchingCaption = False
-                    currentCaption["text"] = currentCaption["text"].removesuffix(" ")
+                    currentCaption["text"] = currentCaption["text"].removesuffix(" ") # Remove trailing space
                     break
-                else:
+                else:  # Add word and word timings to caption
                     currentCaption["text"] += minTimeWord[2].upper() + " " if CAPITALIZE_CAPTIONS else minTimeWord[2].lower() + " "
                     currentCaption["wordTimings"].append([minTimeWord[0], minTimeWord[1]])
-                    speakerLineIndicies[minTimeWord[3]] += 1
+                    speakerLineIndicies[minTimeWord[3]] += 1  #SOMETHING ABOUT ME IS BROKEN, PLEASEFIX
+            else:
+                searchingCaption = False;
 
         captionStream.append(currentCaption)
-        break
+        
     print(captionStream)
 
 @app.route("/alive")
