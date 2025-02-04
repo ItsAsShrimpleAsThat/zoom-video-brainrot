@@ -13,9 +13,22 @@ browser.runtime.onMessage.addListener(
             videoWidth = videoplayer.style.width.replaceAll("px", "");
             reversedAspectRatio = videoHeight / videoWidth; 
             console.log(Math.floor(videoHeight * reversedAspectRatio))
-            videoplayer.style.width = Math.floor(videoHeight * reversedAspectRatio) + "px";
 
-            videoplayer.appendChild("")
+            brainrotWidth = Math.floor(videoHeight * reversedAspectRatio);
+            videoplayer.style.width = brainrotWidth + "px";
+
+            let videoPlayerOverlayElement = videoplayer.getElementsByClassName("vjs-rec-overlay")[0]
+            let rot = document.createElement("iframe");
+
+            rot.id = "brainrotVideo";
+            rot.width = brainrotWidth;
+            rot.height = videoHeight;
+            rot.src = "https://www.youtube.com/embed/s600FYgI5-s?si=3EjPEFVTB8281viQ&amp;mute=1&amp;controls=0?rel=0&amp;autoplay=1";
+            rot.title = "Brainrot Video";
+            rot.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; web-share"
+            rot.referrerPolicy = "strict-origin-when-cross-origin"
+            rot.style = "position: relative; ";
+            videoPlayerOverlayElement.appendChild(rot);
 
             console.log("Starting...")
 
