@@ -1,7 +1,10 @@
+var script = document.createElement('script');
+script.src = 'https://code.jquery.com/jquery-3.6.3.min.js'; // Check https://jquery.com/ for the current version
+document.getElementsByTagName('head')[0].appendChild(script);
+
 addEventListener("DOMContentLoaded", (event) => {
     console.log("testttt")
 });
-
 
 browser.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
@@ -18,17 +21,23 @@ browser.runtime.onMessage.addListener(
             videoplayer.style.width = brainrotWidth + "px";
 
             let videoPlayerOverlayElement = videoplayer.getElementsByClassName("vjs-rec-overlay")[0]
-            let rot = document.createElement("iframe");
+            let brainrotPlayer = document.createElement("iframe");
 
-            rot.id = "brainrotVideo";
-            rot.width = brainrotWidth;
-            rot.height = videoHeight;
-            rot.src = "https://www.youtube.com/embed/s600FYgI5-s?si=3EjPEFVTB8281viQ&amp;mute=1&amp;controls=0?rel=0&amp;autoplay=1";
-            rot.title = "Brainrot Video";
-            rot.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; web-share"
-            rot.referrerPolicy = "strict-origin-when-cross-origin"
-            rot.style = "position: relative; ";
-            videoPlayerOverlayElement.appendChild(rot);
+            brainrotPlayer.id = "brainrotVideo";
+            brainrotPlayer.classList.add("brainrotVideoPlayer")
+            brainrotPlayer.width = brainrotWidth;
+            brainrotPlayer.height = videoHeight;
+            brainrotPlayer.src = "https://www.youtube.com/embed/s600FYgI5-s?si=3EjPEFVTB8281viQ&amp;showinfo=0&amp;autohide=1&amp;mute=1&amp;controls=0?rel=0&amp;autoplay=1&amp;enablejsapi=1";
+            brainrotPlayer.title = "Brainrot Video";
+            brainrotPlayer.allow = "autoplay;"
+            brainrotPlayer.referrerPolicy = "strict-origin-when-cross-origin"
+            brainrotPlayer.style = "position: relative; pointer-events: none;";
+            brainrotPlayer.style.borderRadius = "7pt"
+
+            videoPlayerOverlayElement.appendChild(brainrotPlayer);
+
+            unselectable
+            videoPlayerOverlayElement.appendChild()
 
             console.log("Starting...")
 
