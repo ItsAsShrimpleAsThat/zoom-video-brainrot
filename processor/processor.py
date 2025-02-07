@@ -94,9 +94,9 @@ def getCaptionStream(path):
             
             if unmodifiedCaption:  # Initialize caption with speaker
                 unmodifiedCaption = False
-                currentCaption["speaker"] = minTimeWord[3]
+                currentCaption["speaker"] = minTimeWord[3].removesuffix(" - words")
 
-            if currentCaption["speaker"] == minTimeWord[3]:  # Make sure speaker of this word is the speaker of the current caption
+            if currentCaption["speaker"] == minTimeWord[3].removesuffix(" - words"):  # Make sure speaker of this word is the speaker of the current caption
                 if len(list(currentCaption["text"])) + len(minTimeWord[2]) > MAX_CHARACTERS_PER_CAPTION: # End caption if it exceeds max characters
                     searchingCaption = False
                     currentCaption["text"] = currentCaption["text"].removesuffix(" ") # Remove trailing space
@@ -147,6 +147,10 @@ def brainrot():
 
     align()
 
+    return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json")})
+
+@app.route("/getStoredCaptionStream")
+def getStoredCaptionStream():
     return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json")})
 
 def testRot():

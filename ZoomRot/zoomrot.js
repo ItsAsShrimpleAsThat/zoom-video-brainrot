@@ -42,12 +42,12 @@ browser.runtime.onMessage.addListener(
 
             console.log("Starting...")
 
-            fetch("http://127.0.0.1:6814/alive")
+            fetch("http://127.0.0.1:6814/getStoredCaptionStream", {signal: AbortSignal.timeout(300000)}) // 3 minute timeout
                 .then((response) => {
                     return response.json();
                 })
                 .then((returnjson) => {
-                    console.log(returnjson.message)
+                    console.log(returnjson.captionStream)
                 })
         }
     }
