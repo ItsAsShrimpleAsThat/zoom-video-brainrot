@@ -6,7 +6,9 @@ browser.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         if (request.message === "start")
         {
-            document.getElementById("vjs_video_3_html5_api").disablePictureInPicture = "true" // Disable picture in picture
+            let zoomVideoElement = document.getElementById("vjs_video_3_html5_api") 
+            zoomVideoElement.disablePictureInPicture = "true"; // Disable picture in picture
+            zoomVideoElement.pause();
 
             let videoplayer = document.getElementById("vjs_video_3_html5_api").parentElement.parentElement; // Get video player div so we can change its size
             
@@ -25,7 +27,7 @@ browser.runtime.onMessage.addListener(
             brainrotPlayer.classList.add("brainrotVideoPlayer")
             brainrotPlayer.width = brainrotWidth;
             brainrotPlayer.height = videoHeight;
-            brainrotPlayer.src = "https://www.youtube.com/embed/s600FYgI5-s?si=3EjPEFVTB8281viQ&amp;showinfo=0&amp;autohide=1&amp;mute=1&amp;loop=1&amp;controls=0&amp;rel=0&amp;autoplay=1&amp;enablejsapi=1";
+            brainrotPlayer.src = "https://www.youtube.com/embed/s600FYgI5-s?si=3EjPEFVTB8281viQ&amp;showinfo=0&amp;autohide=1&amp;mute=1&amp;loop=1&amp;controls=0&amp;rel=0&amp;enablejsapi=1";
             brainrotPlayer.title = "Brainrot Video";
             brainrotPlayer.allow = "autoplay;"
             brainrotPlayer.referrerPolicy = "strict-origin-when-cross-origin"
@@ -35,7 +37,7 @@ browser.runtime.onMessage.addListener(
             videoPlayerOverlayElement.appendChild(brainrotPlayer); // Add youtube video
 
             let pauseElement = document.getElementById("vjs_video_3"); // Used to detect when the zoom video is paused
-            brainrotPlayer.addEventListener("onReady", function() { console.log("sigma"); pauseUnpauseBrainrot(brainrotPlayer, pauseElement); })
+            
             videoplayer.addEventListener("click", function() { pauseUnpauseBrainrot(brainrotPlayer, pauseElement); }); // Listener to automatically pause brainrot when the zoom video is paused
 
             console.log("Starting...")
