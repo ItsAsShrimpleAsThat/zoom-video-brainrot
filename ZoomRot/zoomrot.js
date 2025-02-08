@@ -42,13 +42,31 @@ browser.runtime.onMessage.addListener(
 
             console.log("Starting...")
 
-            fetch("http://127.0.0.1:6814/getStoredCaptionStream", {signal: AbortSignal.timeout(300000)}) // 3 minute timeout
-                .then((response) => {
-                    return response.json();
-                })
-                .then((returnjson) => {
-                    console.log(returnjson.captionStream)
-                })
+            let captionStream = [];
+            if(request.useStoredAlignedText)
+            {
+                console.log("Getting Stored Aligned Text...");
+                fetch("http://127.0.0.1:6814/getStoredCaptionStream", {signal: AbortSignal.timeout(300000)}) // 3 minute timeout
+                    .then((response) => {
+                        return response.json();
+                    })
+                    .then((returnjson) => {
+                        captionStream = returnjson.captionStream;
+                        console.log(captionStream);
+                    })
+            }
+            else
+            {
+                console.log("Aligning text (will take a while)...")
+                fetch("http://127.0.0.1:6814/brainrot", {signal: AbortSignal.timeout(300000)}) // 3 minute timeout
+                    .then((response) => {
+                        return response.json();
+                    })
+                    .then((returnjson) => {
+                        captionStream = returnjson.captionStream;
+                        console.log(captionStream);
+                    })
+            }
         }
     }
 );

@@ -1,11 +1,11 @@
 let goButton = document.getElementById("go");
+let connectionStatus = document.getElementById("connectionStatus");
+let useStoredAlignedText = document.getElementById("useStoredAlignedText");
 
 function go(tabs)
 {
-    browser.tabs.sendMessage(tabs[0].id, {"message": "start"});
+    browser.tabs.sendMessage(tabs[0].id, {"message": "start", "useStoredAlignedText": useStoredAlignedText.checked });
 }
-
-let test = document.getElementById("testtest");
 
 goButton.disabled = true;
 function contact(tabs)
@@ -19,13 +19,14 @@ function contact(tabs)
             return response.json();
         })
         .then((returnjson) => {
-            test.innerHTML = returnjson.status;
             if(returnjson.status === "Contact.")
             {
+                connectionStatus.innerHTML = "Connected";
                 goButton.disabled = false;
             }
         })
         .catch((error) => {
+            connectionStatus.innerHTML = "Unconnected";
             goButton.disabled = true;
         })
 }

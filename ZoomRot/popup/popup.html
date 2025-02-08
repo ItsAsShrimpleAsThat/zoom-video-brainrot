@@ -10,10 +10,18 @@
         <hr style="margin-top: -10pt;">
         
         <!-- First layer,  -->
-        <p id="testtest" class="styledtext centered">Test</p>
+        <p class="styledtext centered">Status: 
+            <span id="connectionStatus">Unconnected</span>
+        </p>
 
-        <!-- Second layer, Go button -->
-        <div class="centerflex">
+        <!-- Second layer -->
+        <div class="centerflex" style="margin-top: -5pt;">
+            <label for="useStoredAlignedText" class="styledtext">Use Already Aligned Text: </label>
+            <input type="checkbox" id="useStoredAlignedText">
+        </div>
+
+        <!-- Third layer, Go button -->
+        <div class="centerflex" style="margin-top: 5pt;">
             <button class="centered styledtext" style="width: 60pt; height: 60pt; border-radius: 50%; font-size: 20pt;" id="go">Go!</button>
         </div>
     </body>
