@@ -20,7 +20,10 @@ browser.runtime.onMessage.addListener(
             brainrotWidth = Math.floor(videoHeight * reversedAspectRatio);
             videoplayer.style.width = brainrotWidth + "px";
 
-            let videoPlayerOverlayElement = videoplayer.getElementsByClassName("vjs-rec-overlay")[0] // Overlay to put youtube video in
+            let videoPlayerOverlayElement = document.createElement("div") // New overlay to put youtube video in
+            videoPlayerOverlayElement.classList.add("vjs-rec-overlay");
+            zoomVideoElement.parentElement.insertBefore(videoPlayerOverlayElement, videoplayer.getElementsByClassName("vjs-rec-overlay")[0])
+            console.log("step2")
             let brainrotPlayer = document.createElement("iframe");
 
             brainrotPlayer.id = "brainrotVideo";
