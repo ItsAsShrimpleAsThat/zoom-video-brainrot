@@ -81,9 +81,26 @@ browser.runtime.onMessage.addListener(
             textOverlay.style = "display: flex; justify-content: center;"
 
             let caption = document.createElement("p");
-            caption.style = "margin: auto; font-size: large;"
+            caption.style = "margin: auto; padding: 10pt; text-align: center; font-size: x-large; font-family: Roboto; Arial, Helvetica, sans-serif; font-weight: 600; text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;"
             textOverlay.appendChild(caption);
 
+            // Import roboto font
+            let fontsapi = document.createElement("link"); // google fonts api
+            fontsapi.rel = "preconnect";
+            fontsapi.href = "https://fonts.googleapis.com";
+            document.head.appendChild(fontsapi);
+
+            let gstaticimport = document.createElement("link") // gstatic thing idk
+            gstaticimport.rel = "preconnect";
+            gstaticimport.href = "https://fonts.gstatic.com";
+            gstaticimport.crossOrigin = "anonymous";
+            document.head.appendChild(gstaticimport);
+
+            let robotoFont = document.createElement("link"); // actual font
+            robotoFont.href = "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap";
+            robotoFont.rel = "stylesheet";
+            document.head.appendChild(robotoFont);
+            
             startBrainrot(zoomVideoElement, caption)
         }
     }
