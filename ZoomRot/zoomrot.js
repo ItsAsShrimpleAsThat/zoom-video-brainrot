@@ -5,6 +5,7 @@ addEventListener("DOMContentLoaded", (event) => {
 
 let paused = true;
 let captionStream = null;
+let textTimingOffset = -0.35; // shift captions back a certain amount
 
 browser.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
@@ -73,8 +74,17 @@ browser.runtime.onMessage.addListener(
                         console.log(captionStream);
                     })
             }
+            
+            let textOverlay = document.createElement("div") // Overlay for our caption text to live in
+            textOverlay.classList.add("vjs-rec-overlay");
+            zoomVideoElement.parentElement.insertBefore(textOverlay, videoplayer.getElementsByClassName("vjs-rec-overlay")[1]);
+            textOverlay.style = "display: flex; justify-content: center;"
 
-            startBrainrot(zoomVideoElement)
+            let caption = document.createElement("p");
+            caption.style = "margin: auto; font-size: large;"
+            textOverlay.appendChild(caption);
+
+            startBrainrot(zoomVideoElement, caption)
         }
     }
 );
@@ -98,20 +108,20 @@ function pauseUnpauseBrainrot(brainrotPlayer, pauseElement)
 
 let currentCaptionIndex = 0 // minimize need to binary search for caption
 
-function startBrainrot(zoomVideoElement)
+function startBrainrot(zoomVideoElement, caption)
 {
     setInterval(() => {
         if(!paused)
         {
             console.log(zoomVideoElement.currentTime);
-            let currentTime = zoomVideoElement.currentTime;
+            let currentTime = zoomVideoElement.currentTime - textTimingOffset;
 
             if(captionStream != null)
             {
                 let currentCaption = captionStream[currentCaptionIndex];
                 if(isTimeInBetween(currentTime, currentCaption.minTime, currentCaption.maxTime))
                 {
-                    console.log(currentCaption.text);
+                    caption.innerHTML = currentCaption.text;
                 }
                 else if (currentTime > currentCaption.maxTime)
                 {
