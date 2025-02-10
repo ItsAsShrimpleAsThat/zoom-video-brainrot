@@ -5,7 +5,7 @@ addEventListener("DOMContentLoaded", (event) => {
 
 let paused = true;
 let captionStream = null;
-let textTimingOffset = -0.35; // shift captions back a certain amount
+let textTimingOffset = -0.5; // shift captions back a certain amount
 
 browser.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
@@ -38,8 +38,7 @@ browser.runtime.onMessage.addListener(
 
             let videoPlayerOverlayElement = document.createElement("div") // New overlay to put youtube video in
             videoPlayerOverlayElement.classList.add("vjs-rec-overlay");
-            zoomVideoElement.parentElement.insertBefore(videoPlayerOverlayElement, videoplayer.getElementsByClassName("vjs-rec-overlay")[0])
-            console.log("step2")
+            zoomVideoElement.parentElement.insertBefore(videoPlayerOverlayElement, videoplayer.getElementsByClassName("vjs-rec-overlay")[0]);
             let brainrotPlayer = document.createElement("iframe");
 
             brainrotPlayer.id = "brainrotVideo";
@@ -122,23 +121,48 @@ function startBrainrot(zoomVideoElement, caption)
     setInterval(() => {
         if(!paused)
         {
-            console.log(zoomVideoElement.currentTime);
             let currentTime = zoomVideoElement.currentTime - textTimingOffset;
 
             if(captionStream != null)
             {
-                let currentCaption = captionStream[currentCaptionIndex];
-                if(isTimeInBetween(currentTime, currentCaption.minTime, currentCaption.maxTime))
+                if(currentCaptionIndex == -1)
                 {
-                    caption.innerHTML = currentCaption.text;
+                    caption.innerHTML = "";
+                    currentCaptionIndex = searchForCaptionTime(currentTime, 0, captionStream.length)
                 }
-                else if (currentTime > currentCaption.maxTime)
+                else
                 {
-                    currentCaptionIndex++;
+                    let currentCaption = captionStream[currentCaptionIndex];
+                    let nextCaption = captionStream[currentCaptionIndex + 1];
+                    if(isTimeInBetween(currentTime, currentCaption.minTime, currentCaption.maxTime))
+                    {
+                        caption.innerHTML = currentCaption.text;
+                    }
+                    else if (isTimeInBetween(currentCaption, nextCaption.minTime, nextCaption.maxTime)) // Check if we've entered the next caption
+                    {
+                        currentCaptionIndex++;
+                    }
+                    else // We're not in the next caption (likely because we've seeked ahead in the video) so just search for the current caption
+                    {
+                        currentCaptionIndex = searchForCaptionTime(currentTime, 0, captionStream.length)
+                    }
                 }
             }
         }
     }, 33);
+}
+
+function searchForCaptionTime(time, startIndex, endIndex)
+{
+    if(startIndex > endIndex) { return -1; }
+
+    let middleIndex = Math.floor((startIndex + endIndex) / 2)
+    let middle = captionStream[middleIndex];
+
+    if(isTimeInBetween(time, middle.minTime, middle.maxTime)) { return middleIndex; }
+
+    if(middle.minTime > time) { return searchForCaptionTime(time, startIndex,      middleIndex - 1); }
+    else                      { return searchForCaptionTime(time, middleIndex + 1, endIndex       ); }
 }
 
 function isTimeInBetween(time, min, max)
