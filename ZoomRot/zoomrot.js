@@ -15,6 +15,17 @@ browser.runtime.onMessage.addListener(
             zoomVideoElement.disablePictureInPicture = "true"; // Disable picture in picture
             zoomVideoElement.pause();
 
+            zoomVideoElement.addEventListener("pause", () => {  // Pause or unpause youtube video if zoom video is paused or unpaused
+                console.log("Video Paused");
+                brainrotPlayer.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                paused = true;
+            });
+            zoomVideoElement.addEventListener("play", () => {
+                console.log("Video Unpaused");
+                brainrotPlayer.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                paused = false;
+            });
+
             let videoplayer = document.getElementById("vjs_video_3_html5_api").parentElement.parentElement; // Get video player div so we can change its size
             
             videoHeight = videoplayer.style.height.replaceAll("px", "");
@@ -45,8 +56,6 @@ browser.runtime.onMessage.addListener(
             videoPlayerOverlayElement.appendChild(brainrotPlayer); // Add youtube video
 
             let pauseElement = document.getElementById("vjs_video_3"); // Used to detect when the zoom video is paused
-            
-            videoplayer.addEventListener("click", function() { pauseUnpauseBrainrot(brainrotPlayer, pauseElement); }); // Listener to automatically pause brainrot when the zoom video is paused
 
             console.log("Starting...")
 
@@ -105,23 +114,6 @@ browser.runtime.onMessage.addListener(
         }
     }
 );
-
-function pauseUnpauseBrainrot(brainrotPlayer, pauseElement)
-{
-    console.log(pauseElement.classList)
-    if(pauseElement.classList.contains("vjs-playing"))
-    {
-        console.log("Video Paused");
-        brainrotPlayer.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-        paused = true;
-    }
-    else if(pauseElement.classList.contains("vjs-paused"))
-    {
-        console.log("Video Unpaused");
-        brainrotPlayer.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-        paused = false;
-    }
-}
 
 let currentCaptionIndex = 0 // minimize need to binary search for caption
 
