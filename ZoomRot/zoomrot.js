@@ -136,7 +136,7 @@ function startBrainrot(zoomVideoElement, caption)
                     let nextCaption = captionStream[currentCaptionIndex + 1];
                     if(isTimeInBetween(currentTime, currentCaption.minTime, currentCaption.maxTime))
                     {
-                        caption.innerHTML = currentCaption.text;
+                        caption.innerHTML = hightlightWord(currentTime + textTimingOffset, currentCaption);
                     }
                     else if (isTimeInBetween(currentTime, nextCaption.minTime, nextCaption.maxTime)) // Check if we've entered the next caption
                     {
@@ -168,4 +168,26 @@ function searchForCaptionTime(time, startIndex, endIndex)
 function isTimeInBetween(time, min, max)
 {
     return time >= min && time < max;
+}
+
+const highlightingFormat = "style=\"color: magenta;\"";
+function hightlightWord(time, currentCaption)
+{
+    let textToDisplay = "";
+
+    for(let i = 0; i < currentCaption.wordTimings.length; i++)
+    {
+        let currentWordTimings = currentCaption.wordTimings[i];
+
+        if(isTimeInBetween(time, currentWordTimings[0], currentWordTimings[1]))
+        {
+            textToDisplay = textToDisplay + "<span " + highlightingFormat + ">" + currentCaption.text.split(" ")[i] + "</span>" + " "; 
+        }
+        else
+        {
+            textToDisplay = textToDisplay + currentCaption.text.split(" ")[i] + " ";
+        }
+    }
+
+    return textToDisplay;
 }
