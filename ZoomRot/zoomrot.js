@@ -2,6 +2,10 @@ addEventListener("DOMContentLoaded", (event) => {
     console.log("testttt")
 });
 
+
+let paused = true;
+let captionStream = null;
+
 browser.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         if (request.message === "start")
@@ -30,7 +34,7 @@ browser.runtime.onMessage.addListener(
             brainrotPlayer.classList.add("brainrotVideoPlayer")
             brainrotPlayer.width = brainrotWidth;
             brainrotPlayer.height = videoHeight;
-            brainrotPlayer.src = "https://www.youtube.com/embed/s600FYgI5-s?si=3EjPEFVTB8281viQ&amp;showinfo=0&amp;autohide=1&amp;mute=1&amp;loop=1&amp;controls=0&amp;rel=0&amp;enablejsapi=1";
+            brainrotPlayer.src = "https://www.youtube.com/embed/s600FYgI5-s?si=3EjPEFVTB8281viQ&amp;showinfo=0&amp;autohide=1&amp;mute=1&amp;loop=1&amp;playlist=s600FYgI5-s&amp;controls=0&amp;rel=0&amp;enablejsapi=1";
             brainrotPlayer.title = "Brainrot Video";
             brainrotPlayer.allow = "autoplay;"
             brainrotPlayer.referrerPolicy = "strict-origin-when-cross-origin"
@@ -45,7 +49,6 @@ browser.runtime.onMessage.addListener(
 
             console.log("Starting...")
 
-            let captionStream = [];
             if(request.useStoredAlignedText)
             {
                 console.log("Getting Stored Aligned Text...");
@@ -70,6 +73,8 @@ browser.runtime.onMessage.addListener(
                         console.log(captionStream);
                     })
             }
+
+            startBrainrot(zoomVideoElement)
         }
     }
 );
@@ -80,11 +85,44 @@ function pauseUnpauseBrainrot(brainrotPlayer, pauseElement)
     if(pauseElement.classList.contains("vjs-playing"))
     {
         console.log("Video Paused");
-        brainrotPlayer.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*')
+        brainrotPlayer.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+        paused = true;
     }
     else if(pauseElement.classList.contains("vjs-paused"))
     {
         console.log("Video Unpaused");
-        brainrotPlayer.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*')
+        brainrotPlayer.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+        paused = false;
     }
+}
+
+let currentCaptionIndex = 0 // minimize need to binary search for caption
+
+function startBrainrot(zoomVideoElement)
+{
+    setInterval(() => {
+        if(!paused)
+        {
+            console.log(zoomVideoElement.currentTime);
+            let currentTime = zoomVideoElement.currentTime;
+
+            if(captionStream != null)
+            {
+                let currentCaption = captionStream[currentCaptionIndex];
+                if(isTimeInBetween(currentTime, currentCaption.minTime, currentCaption.maxTime))
+                {
+                    console.log(currentCaption.text);
+                }
+                else if (currentTime > currentCaption.maxTime)
+                {
+                    currentCaptionIndex++;
+                }
+            }
+        }
+    }, 33);
+}
+
+function isTimeInBetween(time, min, max)
+{
+    return time >= min && time < max;
 }
