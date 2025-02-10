@@ -138,7 +138,7 @@ function startBrainrot(zoomVideoElement, caption)
                     {
                         caption.innerHTML = currentCaption.text;
                     }
-                    else if (isTimeInBetween(currentCaption, nextCaption.minTime, nextCaption.maxTime)) // Check if we've entered the next caption
+                    else if (isTimeInBetween(currentTime, nextCaption.minTime, nextCaption.maxTime)) // Check if we've entered the next caption
                     {
                         currentCaptionIndex++;
                     }
