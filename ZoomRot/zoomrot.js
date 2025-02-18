@@ -149,7 +149,7 @@ function startBrainrot(zoomVideoElement, caption)
                 }
             }
         }
-    }, 33);
+    }, 16);
 }
 
 function searchForCaptionTime(time, startIndex, endIndex)

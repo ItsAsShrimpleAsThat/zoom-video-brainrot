@@ -5,11 +5,13 @@ import subprocess
 import glob
 import vttToTextGrid
 import json
+from openai import OpenAI
 
 inProcessorPath = os.path.exists("acoustic.path")
 
 acousticPathFilePath = "acoustic.path" if inProcessorPath else "processor/acoustic.path"
 dictionaryPathFilePath = "dictionary.path" if inProcessorPath else "processor/dictionary.path"
+chatgptKeyFilePath = "chatgpt.key" if inProcessorPath else "processor/chatgpt.key"
 
 acousticmodelpathfile = open(acousticPathFilePath, "r")
 ACOUSTIC_MODEL_PATH = acousticmodelpathfile.read()
@@ -18,6 +20,10 @@ acousticmodelpathfile.close()
 dictionarypathfile = open(dictionaryPathFilePath, "r")
 DICTIONARY_PATH = dictionarypathfile.read()
 dictionarypathfile.close()
+
+gptkeyfile = open(chatgptKeyFilePath, "r")
+CHATGPT_KEY = gptkeyfile.read()
+gptkeyfile.close()
 
 FFMPEG_DEFAULT_CONVERT = "ffmpeg -i {inputPath} -y -vn {outputPath}"
 CORPUS_FILE_NAMES = "brainrot" # What should the converted .wav or .TextGrid files be called?
@@ -154,6 +160,9 @@ def brainrot():
 @app.route("/getStoredCaptionStream")
 def getStoredCaptionStream():
     return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json")})
+
+def getKeywords():
+    keywords = []
 
 def testRot():
     mp4Files = glob.glob(f"{CORPUS_PATH}/*.mp4") # Get all mp4, wav, and vtt files in download folder
