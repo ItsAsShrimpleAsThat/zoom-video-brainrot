@@ -12,6 +12,7 @@ inProcessorPath = os.path.exists("acoustic.path")
 acousticPathFilePath = "acoustic.path" if inProcessorPath else "processor/acoustic.path"
 dictionaryPathFilePath = "dictionary.path" if inProcessorPath else "processor/dictionary.path"
 chatgptKeyFilePath = "chatgpt.key" if inProcessorPath else "processor/chatgpt.key"
+promptFilePath = "keywords.prompt" if inProcessorPath else "processor/keywords.prompt"
 
 acousticmodelpathfile = open(acousticPathFilePath, "r")
 ACOUSTIC_MODEL_PATH = acousticmodelpathfile.read()
@@ -24,6 +25,13 @@ dictionarypathfile.close()
 gptkeyfile = open(chatgptKeyFilePath, "r")
 CHATGPT_KEY = gptkeyfile.read()
 gptkeyfile.close()
+gptClient = OpenAI(
+  api_key = CHATGPT_KEY
+)
+
+promptFile = open(promptFilePath, "r")
+KEYWORD_PROMPT = promptFile.read()
+promptFile.close()
 
 FFMPEG_DEFAULT_CONVERT = "ffmpeg -i {inputPath} -y -vn {outputPath}"
 CORPUS_FILE_NAMES = "brainrot" # What should the converted .wav or .TextGrid files be called?
@@ -36,6 +44,8 @@ MFA_ALIGN_COMMAND = "mfa align {corpusPath} {dictionaryPath} {modelPath} {output
 
 MAX_CHARACTERS_PER_CAPTION = 25
 CAPITALIZE_CAPTIONS = True
+
+LINE_GROUP_SIZE = 1 # How many lines to group together to reduce chatgpt calls
 
 app = Flask(__name__)
 CORS(app)
@@ -161,8 +171,43 @@ def brainrot():
 def getStoredCaptionStream():
     return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json")})
 
-def getKeywords():
+def getKeywords(vttFilePath):
     keywords = []
+
+    lines = vttToTextGrid.getVTTLines(vttFilePath)
+
+    currentGroupSize = 0
+    line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": False, "keywords": []}
+    for i in range(2):
+        if currentGroupSize < LINE_GROUP_SIZE:
+            line["text"] += lines[i]["text"] + " "
+            line["minTime"] = min(line["minTime"], lines[i]["minTime"])
+            line["maxTime"] = min(line["maxTime"], lines[i]["maxTime"])
+            currentGroupSize += 1
+            continue
+
+        line["text"].removesuffix(" ")
+        # Get chatgpt response
+        completion = gptClient.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                    {
+                        "role": "system",
+                        "content": KEYWORD_PROMPT
+                    },
+                    {
+                        "role": "user",
+                        "content": line["text"]
+                    }
+            ]
+        )
+
+        response = completion.choices[0].message.content
+
+        print(response)
+
+        currentGroupSize = 0
+getKeywords(glob.glob(f"{CORPUS_PATH}/*.vtt")[0])   
 
 def testRot():
     mp4Files = glob.glob(f"{CORPUS_PATH}/*.mp4") # Get all mp4, wav, and vtt files in download folder
