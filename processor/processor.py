@@ -5,6 +5,7 @@ import subprocess
 import glob
 import vttToTextGrid
 import json
+from time import sleep
 from openai import OpenAI
 
 inProcessorPath = os.path.exists("acoustic.path")
@@ -45,7 +46,7 @@ MFA_ALIGN_COMMAND = "mfa align {corpusPath} {dictionaryPath} {modelPath} {output
 MAX_CHARACTERS_PER_CAPTION = 25
 CAPITALIZE_CAPTIONS = True
 
-LINE_GROUP_SIZE = 1 # How many lines to group together to reduce chatgpt calls
+LINE_GROUP_SIZE = 2 # How many lines to group together to reduce chatgpt calls
 
 app = Flask(__name__)
 CORS(app)
@@ -177,14 +178,23 @@ def getKeywords(vttFilePath):
     lines = vttToTextGrid.getVTTLines(vttFilePath)
 
     currentGroupSize = 0
-    line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": False, "keywords": []}
-    for i in range(2):
+    line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": []}
+    for i in range(5):
+        if currentGroupSize == 0:
+            line["text"] += lines[i]["text"] + " "
+            line["minTime"] = min(line["minTime"], lines[i]["minTime"])
+            line["maxTime"] = min(line["maxTime"], lines[i]["maxTime"])
+            currentGroupSize += 1
+            i += 1
+
         if currentGroupSize < LINE_GROUP_SIZE:
             line["text"] += lines[i]["text"] + " "
             line["minTime"] = min(line["minTime"], lines[i]["minTime"])
             line["maxTime"] = min(line["maxTime"], lines[i]["maxTime"])
             currentGroupSize += 1
-            continue
+
+            if len(lines) - i >= LINE_GROUP_SIZE:
+                continue
 
         line["text"].removesuffix(" ")
         # Get chatgpt response
@@ -204,9 +214,23 @@ def getKeywords(vttFilePath):
 
         response = completion.choices[0].message.content
 
-        print(response)
+        if(response == "INSTRUCTION"):
+            line["instruction"] = True
+            line["keywords"] = None
+            keywords.append(line)
+        else:
+            line["instruction"] = False
+            keywordsList = response.split(", ")
+            line["keywords"] = keywordsList
+            keywords.append(line)
 
         currentGroupSize = 0
+        print(i, keywordsList)
+        print(line["text"])
+        line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": []}
+
+        sleep(0.3)
+
 getKeywords(glob.glob(f"{CORPUS_PATH}/*.vtt")[0])   
 
 def testRot():
