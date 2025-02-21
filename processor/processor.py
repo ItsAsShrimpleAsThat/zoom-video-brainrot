@@ -233,34 +233,5 @@ def getKeywords(vttFilePath):
 
 getKeywords(glob.glob(f"{CORPUS_PATH}/*.vtt")[0])   
 
-def testRot():
-    mp4Files = glob.glob(f"{CORPUS_PATH}/*.mp4") # Get all mp4, wav, and vtt files in download folder
-    wavFiles = glob.glob(f"{CORPUS_PATH}/{CORPUS_FILE_NAMES}.wav")
-    vttFiles = glob.glob(f"{CORPUS_PATH}/*.vtt")
-    
-    if len(mp4Files) < 1: # Only proceed if theres 1 mp4 file or wav file
-        if len(wavFiles) == 1: # We can use wav files from previous run
-            print("wav file found, not converting mp4")
-        else:
-            return False
-    elif len(mp4Files) > 1:
-        return False
-    
-    if len(vttFiles) < 1:
-        return False
-    elif len(vttFiles) > 1:
-        return False
-
-    if len(mp4Files) == 1: # Convert mp4 to wav if we don't already have a wav file
-        mp4File = mp4Files[0]
-        ffmpegConvert(mp4File, f"{CORPUS_PATH}/{CORPUS_FILE_NAMES}.wav")
-        
-    vttFile = vttFiles[0]
-    vttToTextGrid.convert(vttFile, f"{CORPUS_PATH}/{CORPUS_FILE_NAMES}.TextGrid")
-
-    align()
-
-    return jsonify({""})
-
 if __name__ == "__main__":
     app.run(host="localhost", port=6814)
