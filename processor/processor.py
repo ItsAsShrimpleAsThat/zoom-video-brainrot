@@ -47,6 +47,7 @@ MAX_CHARACTERS_PER_CAPTION = 25
 CAPITALIZE_CAPTIONS = True
 
 LINE_GROUP_SIZE = 2 # How many lines to group together to reduce chatgpt calls
+LINE_GROUP_MIN_WORDS = LINE_GROUP_SIZE * 14
 
 app = Flask(__name__)
 CORS(app)
@@ -166,7 +167,7 @@ def brainrot():
 
     align()
 
-    return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json")})
+    return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json"), "keywords": getKeywords(glob.glob(f"{CORPUS_PATH}/*.vtt")[0])})
 
 @app.route("/getStoredCaptionStream")
 def getStoredCaptionStream():
@@ -197,22 +198,25 @@ def getKeywords(vttFilePath):
                 continue
 
         line["text"].removesuffix(" ")
-        # Get chatgpt response
-        completion = gptClient.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                    {
-                        "role": "system",
-                        "content": KEYWORD_PROMPT
-                    },
-                    {
-                        "role": "user",
-                        "content": line["text"]
-                    }
-            ]
-        )
 
-        response = completion.choices[0].message.content
+        response = "INSTRUCTION"
+        if line["text"].split(" ") > LINE_GROUP_MIN_WORDS:
+            # Get chatgpt response
+            completion = gptClient.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                        {
+                            "role": "system",
+                            "content": KEYWORD_PROMPT
+                        },
+                        {
+                            "role": "user",
+                            "content": line["text"]
+                        }
+                ]
+            )
+
+            response = completion.choices[0].message.content
 
         if(response == "INSTRUCTION"):
             line["instruction"] = True
@@ -225,13 +229,9 @@ def getKeywords(vttFilePath):
             keywords.append(line)
 
         currentGroupSize = 0
-        print(i, keywordsList)
-        print(line["text"])
         line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": []}
 
-        sleep(0.3)
-
-getKeywords(glob.glob(f"{CORPUS_PATH}/*.vtt")[0])   
+        sleep(0.31) # Avoid rate limits lmao
 
 if __name__ == "__main__":
     app.run(host="localhost", port=6814)
