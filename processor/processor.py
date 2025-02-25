@@ -200,6 +200,7 @@ def getKeywords(vttFilePath):
         line["text"].removesuffix(" ")
 
         response = "INSTRUCTION"
+        sleepTime = 0.31
         if line["text"].split(" ") > LINE_GROUP_MIN_WORDS:
             # Get chatgpt response
             completion = gptClient.chat.completions.create(
@@ -217,6 +218,8 @@ def getKeywords(vttFilePath):
             )
 
             response = completion.choices[0].message.content
+        else:
+            sleepTime = 0
 
         if(response == "INSTRUCTION"):
             line["instruction"] = True
@@ -231,7 +234,7 @@ def getKeywords(vttFilePath):
         currentGroupSize = 0
         line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": []}
 
-        sleep(0.31) # Avoid rate limits lmao
+        sleep(sleepTime) # Avoid rate limits lmao
 
 if __name__ == "__main__":
     app.run(host="localhost", port=6814)
