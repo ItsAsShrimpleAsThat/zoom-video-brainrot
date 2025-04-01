@@ -62,6 +62,7 @@ def ffmpegConvert(inputPath, outputPath):
         os.remove(inputPath)
 
 def align():
+    print("Starting Alignment")
     export_path = os.path.join(CORPUS_PATH, "aligned")
 
     subprocess.run(MFA_ALIGN_COMMAND.format(corpusPath=CORPUS_PATH, 
@@ -135,6 +136,7 @@ def getCaptionStream(path):
 @app.route("/alive")
 def alive():
     return jsonify({"message" : "Hello from Python!"})  
+
 @app.route("/contact")
 def contact():
     return jsonify({"status" : "Contact."})
@@ -149,8 +151,10 @@ def brainrot():
         if len(wavFiles) == 1: # We can use wav files from previous run
             print("wav file found, not converting mp4")
         else:
+            print("ERROR: mp4 file or wav file not found in corpus folder")
             return jsonify({"status" : "ERROR: mp4 file or wav file not found in corpus folder"})
     elif len(mp4Files) > 1:
+        print("ERROR: more than 1 mp4 file found. please only place 1 mp4 file in corpus folder")
         return jsonify({"status" : "ERROR: more than 1 mp4 file found. please only place 1 mp4 file in corpus folder"})
     
     if len(vttFiles) < 1:
@@ -159,6 +163,7 @@ def brainrot():
         return jsonify({"status" : "ERROR: more than 1 vtt file found. please only place 1 vtt file in corpus folder"})
 
     if len(mp4Files) == 1: # Convert mp4 to wav if we don't already have a wav file
+        print("Converting MP4")
         mp4File = mp4Files[0]
         ffmpegConvert(mp4File, f"{CORPUS_PATH}/{CORPUS_FILE_NAMES}.wav")
         
@@ -168,6 +173,7 @@ def brainrot():
     align()
 
     return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json"), "keywords": getKeywords(glob.glob(f"{CORPUS_PATH}/*.vtt")[0])})
+    #return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json")})
 
 @app.route("/getStoredCaptionStream")
 def getStoredCaptionStream():
@@ -180,7 +186,8 @@ def getKeywords(vttFilePath):
 
     currentGroupSize = 0
     line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": []}
-    for i in range(5):
+    #for i in range(len(lines) - 1):
+    for i in range(30):
         if currentGroupSize == 0:
             line["text"] += lines[i]["text"] + " "
             line["minTime"] = min(line["minTime"], lines[i]["minTime"])
@@ -201,7 +208,7 @@ def getKeywords(vttFilePath):
 
         response = "INSTRUCTION"
         sleepTime = 0.31
-        if line["text"].split(" ") > LINE_GROUP_MIN_WORDS:
+        if len(line["text"].split(" ")) > LINE_GROUP_MIN_WORDS:
             # Get chatgpt response
             completion = gptClient.chat.completions.create(
                 model="gpt-4o-mini",
@@ -221,13 +228,16 @@ def getKeywords(vttFilePath):
         else:
             sleepTime = 0
 
+        print(response)
+
         if(response == "INSTRUCTION"):
             line["instruction"] = True
             line["keywords"] = None
             keywords.append(line)
         else:
             line["instruction"] = False
-            keywordsList = response.split(", ")
+            test = ""
+            keywordsList = response.replace(" ", "").split(",")
             line["keywords"] = keywordsList
             keywords.append(line)
 
@@ -235,6 +245,13 @@ def getKeywords(vttFilePath):
         line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": []}
 
         sleep(sleepTime) # Avoid rate limits lmao
+    
+    keywordsJSONContainer = { "keywords" : keywords }
+    keywordOutputFile = open(f"{ALIGNER_OUTPUT_PATH}/key.words", "w")
+    keywordOutputFile.write(json.dumps(keywordsJSONContainer))
+    keywordOutputFile.close()
+
+    return keywords
 
 if __name__ == "__main__":
     app.run(host="localhost", port=6814)
