@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 from flask import Flask, jsonify
 from flask_cors import CORS
 import subprocess
@@ -7,6 +8,9 @@ import vttToTextGrid
 import json
 from time import sleep
 from openai import OpenAI
+import requests
+import random
+import urllib
 
 inProcessorPath = os.path.exists("acoustic.path")
 
@@ -170,14 +174,49 @@ def brainrot():
     vttFile = vttFiles[0]
     vttToTextGrid.convert(vttFile, f"{CORPUS_PATH}/{CORPUS_FILE_NAMES}.TextGrid")
 
-    align()
+    #align()
 
-    return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json"), "keywords": getKeywords(glob.glob(f"{CORPUS_PATH}/*.vtt")[0])})
+    keywords = getKeywords(glob.glob(f"{CORPUS_PATH}/*.vtt")[0])
+    for i in range(len(keywords)):
+        if keywords[i]["instruction"]:
+            continue
+        
+        for keyword in keywords[i]["keywords"]:
+            keywords[i]["images"][keyword] = getImageFromKeyword(keyword)
+            sleep(0.1)
+        
+        print(keywords[i])
+
+    return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json"), "keywords": keywords})
     #return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json")})
 
 @app.route("/getStoredCaptionStream")
 def getStoredCaptionStream():
     return jsonify({"status" : "success", "captionStream" : getCaptionStream(f"{ALIGNER_OUTPUT_PATH}/{CORPUS_FILE_NAMES}.json")})
+
+powerBias = 4;
+maxImageIndex = 4;
+def getImageFromKeyword(keyword):
+    url = "https://commons.wikimedia.org/w/api.php"
+    params = {
+        "action": "query",
+        "list": "search",
+        "format": "json",
+        "srnamespace" : 6,
+        "srsearch": keyword,
+        "origin": "*"  # This is still good practice for Wikimedia API requests
+    }
+
+    response = requests.get(url, params=params).json()
+    images = response["query"]["search"]
+
+    if len(images) == 0:
+        return None
+    
+    biasedRandom = pow(random.random(), powerBias) # More likely to pick numbers closer to zero
+    chosenImageIdx = round(min(biasedRandom * min(maxImageIndex, len(images)), maxImageIndex)) # Scale so we either hit our max image index or if we don't have that many images, just do the number of images
+    
+    return urllib.parse.quote(images[chosenImageIdx]["title"].replace(" ", "_"))
 
 def getKeywords(vttFilePath):
     keywords = []
@@ -185,7 +224,7 @@ def getKeywords(vttFilePath):
     lines = vttToTextGrid.getVTTLines(vttFilePath)
 
     currentGroupSize = 0
-    line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": []}
+    line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": [], "images": dict()}
     #for i in range(len(lines) - 1):
     for i in range(30):
         if currentGroupSize == 0:
@@ -237,12 +276,12 @@ def getKeywords(vttFilePath):
         else:
             line["instruction"] = False
             test = ""
-            keywordsList = response.replace(" ", "").split(",")
+            keywordsList = response.split(", ")
             line["keywords"] = keywordsList
             keywords.append(line)
 
         currentGroupSize = 0
-        line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": []}
+        line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": [], "images": dict()}
 
         sleep(sleepTime) # Avoid rate limits lmao
     
