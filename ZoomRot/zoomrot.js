@@ -79,8 +79,8 @@ browser.runtime.onMessage.addListener(
                     })
                     .then((returnjson) => {
                         captionStream = returnjson.captionStream;
-                        console.log(captionStream)
                         console.log(captionStream);
+                        console.log(returnjson.keywords);
                     })
             }
             

@@ -199,7 +199,7 @@ maxImageIndex = 4;
 acceptedFileExtensions = ["png", "jpg", "jpeg", "webp", "gif", "svg", "avif"]
 def getImageFromKeyword(keyword):
     url = "https://commons.wikimedia.org/w/api.php"
-    params = {
+    searchparams = {
         "action": "query",
         "list": "search",
         "format": "json",
@@ -207,10 +207,8 @@ def getImageFromKeyword(keyword):
         "srsearch": keyword,
     }
 
-    print(keyword.replace(" ", "_"))
-
-    response = requests.get(url, params=params).json()
-    images = response["query"]["search"]
+    searchresponse = requests.get(url, params=searchparams).json()
+    images = searchresponse["query"]["search"]
 
     images = [item for item in images if item["title"].endswith(tuple(acceptedFileExtensions))]
 
@@ -221,7 +219,20 @@ def getImageFromKeyword(keyword):
     chosenImageIdx = round(min(biasedRandom * min(maxImageIndex, len(images)), maxImageIndex)) # Scale so we either hit our max image index or if we don't have that many images, just do the number of images
     
     print(images[chosenImageIdx]["title"], keyword, biasedRandom)
-    return urllib.parse.quote(images[chosenImageIdx]["title"].replace(" ", "_"))
+
+    urlparams = {
+        "action": "query",
+        "titles": images[chosenImageIdx]["title"],
+        "prop": "pageimages",
+        "format": "json",
+        "pithumbsize": 500
+    }
+    urlresponse = searchresponse = requests.get(url, params=urlparams).json()
+
+    imagePages = urlresponse["query"]["pages"]
+    imageurl = imagePages[next(iter(imagePages))]["thumbnail"]["source"]
+
+    return imageurl
 
 def getKeywords(vttFilePath):
     keywords = []
@@ -231,7 +242,7 @@ def getKeywords(vttFilePath):
     currentGroupSize = 0
     line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": [], "images": dict()}
     #for i in range(len(lines) - 1):
-    for i in range(30):
+    for i in range(8):
         if currentGroupSize == 0:
             line["text"] += lines[i]["text"] + " "
             line["minTime"] = min(line["minTime"], lines[i]["minTime"])
