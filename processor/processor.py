@@ -196,6 +196,7 @@ def getStoredCaptionStream():
 
 powerBias = 4;
 maxImageIndex = 4;
+acceptedFileExtensions = ["png", "jpg", "jpeg", "webp", "gif", "svg", "avif"]
 def getImageFromKeyword(keyword):
     url = "https://commons.wikimedia.org/w/api.php"
     params = {
@@ -204,11 +205,14 @@ def getImageFromKeyword(keyword):
         "format": "json",
         "srnamespace" : 6,
         "srsearch": keyword,
-        "origin": "*"  # This is still good practice for Wikimedia API requests
     }
+
+    print(keyword.replace(" ", "_"))
 
     response = requests.get(url, params=params).json()
     images = response["query"]["search"]
+
+    images = [item for item in images if item["title"].endswith(tuple(acceptedFileExtensions))]
 
     if len(images) == 0:
         return None
@@ -216,6 +220,7 @@ def getImageFromKeyword(keyword):
     biasedRandom = pow(random.random(), powerBias) # More likely to pick numbers closer to zero
     chosenImageIdx = round(min(biasedRandom * min(maxImageIndex, len(images)), maxImageIndex)) # Scale so we either hit our max image index or if we don't have that many images, just do the number of images
     
+    print(images[chosenImageIdx]["title"], keyword, biasedRandom)
     return urllib.parse.quote(images[chosenImageIdx]["title"].replace(" ", "_"))
 
 def getKeywords(vttFilePath):
