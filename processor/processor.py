@@ -240,20 +240,20 @@ def getKeywords(vttFilePath):
     lines = vttToTextGrid.getVTTLines(vttFilePath)
 
     currentGroupSize = 0
-    line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": [], "images": dict()}
+    line = {"text": "", "minTime": 999999999.99, "maxTime": 0.0, "instruction": True, "keywords": [], "images": dict()}
     #for i in range(len(lines) - 1):
     for i in range(8):
         if currentGroupSize == 0:
             line["text"] += lines[i]["text"] + " "
             line["minTime"] = min(line["minTime"], lines[i]["minTime"])
-            line["maxTime"] = min(line["maxTime"], lines[i]["maxTime"])
+            line["maxTime"] = max(line["maxTime"], lines[i]["maxTime"])
             currentGroupSize += 1
             i += 1
 
         if currentGroupSize < LINE_GROUP_SIZE:
             line["text"] += lines[i]["text"] + " "
             line["minTime"] = min(line["minTime"], lines[i]["minTime"])
-            line["maxTime"] = min(line["maxTime"], lines[i]["maxTime"])
+            line["maxTime"] = max(line["maxTime"], lines[i]["maxTime"])
             currentGroupSize += 1
 
             if len(lines) - i >= LINE_GROUP_SIZE:
@@ -297,7 +297,7 @@ def getKeywords(vttFilePath):
             keywords.append(line)
 
         currentGroupSize = 0
-        line = {"text": "", "minTime": 0.0, "maxTime": 0.0, "instruction": True, "keywords": [], "images": dict()}
+        line = {"text": "", "minTime": 999999999.99, "maxTime": 0.0, "instruction": True, "keywords": [], "images": dict()}
 
         sleep(sleepTime) # Avoid rate limits lmao
     

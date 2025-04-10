@@ -5,6 +5,7 @@ addEventListener("DOMContentLoaded", (event) => {
 
 let paused = true;
 let captionStream = null;
+let imageStream = null;
 let textTimingOffset = -0.5; // shift captions back a certain amount
 
 browser.runtime.onMessage.addListener(
@@ -79,6 +80,7 @@ browser.runtime.onMessage.addListener(
                     })
                     .then((returnjson) => {
                         captionStream = returnjson.captionStream;
+                        imageStream = returnjson.keywords;
                         console.log(captionStream);
                         console.log(returnjson.keywords);
                     })
@@ -88,6 +90,11 @@ browser.runtime.onMessage.addListener(
             textOverlay.classList.add("vjs-rec-overlay");
             zoomVideoElement.parentElement.insertBefore(textOverlay, videoplayer.getElementsByClassName("vjs-rec-overlay")[1]);
             textOverlay.style = "display: flex; justify-content: center;"
+
+            let imageElement = document.createElement("img");
+            imageElement.style = "width: 95%;"
+            imageElement.src 
+            textOverlay.appendChild(imageElement)
 
             let caption = document.createElement("p");
             caption.style = "margin: auto; padding: 10pt; text-align: center; font-size: x-large; font-family: Roboto; Arial, Helvetica, sans-serif; font-weight: 600; text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;"
@@ -115,7 +122,8 @@ browser.runtime.onMessage.addListener(
     }
 );
 
-let currentCaptionIndex = 0 // minimize need to binary search for caption
+let currentCaptionIndex = 0; // minimize need to binary search for caption
+let currentImageChunkIndex = 0;
 
 function startBrainrot(zoomVideoElement, caption)
 {
@@ -129,7 +137,7 @@ function startBrainrot(zoomVideoElement, caption)
                 if(currentCaptionIndex == -1)
                 {
                     caption.innerHTML = "";
-                    currentCaptionIndex = searchForCaptionTime(currentTime, 0, captionStream.length)
+                    currentCaptionIndex = searchForCaptionTime(currentTime, 0, captionStream.length, captionStream);
                 }
                 else
                 {
@@ -145,25 +153,54 @@ function startBrainrot(zoomVideoElement, caption)
                     }
                     else // We're not in the next caption (likely because we've seeked ahead in the video) so just search for the current caption
                     {
-                        currentCaptionIndex = searchForCaptionTime(currentTime, 0, captionStream.length)
+                        currentCaptionIndex = searchForCaptionTime(currentTime, 0, captionStream.length, captionStream);
                     }
+                }
+            }
+
+            if(imageStream != null)
+            {
+                if(currentImageChunkIndex == -1)
+                {
+                    // clear image
+                    currentImageChunkIndex = searchForCaptionTime(currentTime, 0, imageStream.length, imageStream)
+                }
+                else
+                {
+                    let currentImgChunk = imageStream[currentImageChunkIndex];
+                    let nextImgChunk = imageStream[currentImageChunkIndex + 1];
+                    if(isTimeInBetween(currentTime, currentImgChunk.minTime, currentImgChunk.maxTime))
+                    {
+                        //thing
+                    }
+                    else if (isTimeInBetween(currentTime, nextImgChunk.minTime, nextImgChunk.maxTime)) // Check if we've entered the next caption
+                    {
+                        currentImageChunkIndex++;
+                    }
+                    else // We're not in the next caption (likely because we've seeked ahead in the video) so just search for the current caption
+                    {
+                        currentImageChunkIndex = searchForCaptionTime(currentTime, 0, imageStream.length, imageStream);
+                    }
+
+                    console.log(currentImgChunk);
+                    console.log(currentImageChunkIndex);
                 }
             }
         }
     }, 16);
 }
 
-function searchForCaptionTime(time, startIndex, endIndex)
+function searchForCaptionTime(time, startIndex, endIndex, stream)
 {
     if(startIndex > endIndex) { return -1; }
 
     let middleIndex = Math.floor((startIndex + endIndex) / 2)
-    let middle = captionStream[middleIndex];
+    let middle = stream[middleIndex];
 
     if(isTimeInBetween(time, middle.minTime, middle.maxTime)) { return middleIndex; }
 
-    if(middle.minTime > time) { return searchForCaptionTime(time, startIndex,      middleIndex - 1); }
-    else                      { return searchForCaptionTime(time, middleIndex + 1, endIndex       ); }
+    if(middle.minTime > time) { return searchForCaptionTime(time, startIndex,      middleIndex - 1, stream); }
+    else                      { return searchForCaptionTime(time, middleIndex + 1, endIndex       , stream); }
 }
 
 function isTimeInBetween(time, min, max)
